@@ -249,6 +249,7 @@ def fix_play(curr_play):
 		play[3] = "JAX"
 	play[5] = str(play[5]).zfill(2)
 	play.insert(0,str(play[4]) + "_" + play[5] + "_" + play[3] + "_" + play[2])
+	play[1] = play[0] + "_" + str(play[1])
 	return play
 
 def parse(GAME):
@@ -303,7 +304,7 @@ def parse_folder(YEAR):
 
 def headers():
 	return ["NEW_GAME_ID",
-			"PLAY_NUM",
+			"UNIQUE_PLAY_ID",
 			"SPORTRADAR_GAME_ID",
 			"HOME_TEAM_ABBR",
 			"AWAY_TEAM_ABBR",
@@ -353,5 +354,5 @@ KEYS = get_api_keys()
 
 # save_pbp("2021","reg")
 
-# data = parse_folder(2021)
-# write_plays_to_csv(data)
+data = parse_folder(2021)
+write_plays_to_csv(data)
