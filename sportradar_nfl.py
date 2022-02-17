@@ -343,7 +343,7 @@ def headers():
 			"SQUIB"]
 
 def write_plays_to_csv(DATA):
-	with open("2021sportradar.csv","w",encoding="UTF8",newline="") as file:
+	with open("2021-Sportradar-NFL.csv","w",encoding="UTF8",newline="") as file:
 		df_rows = pd.DataFrame(DATA, columns=headers()).to_numpy().tolist()
 		writer = csv.writer(file)
 		writer.writerow(headers())
