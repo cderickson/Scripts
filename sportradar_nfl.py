@@ -65,9 +65,9 @@ def save_pbp(YEAR, SEASON_TYPE):
 	print(f"Game_IDs Found: {len(game_id_list)}")
 
 	root = os.getcwd()
-	if os.path.isdir(str(YEAR)) == False:
-		os.mkdir(str(YEAR))
-	os.chdir(root + "\\" + str(YEAR))
+	if os.path.isdir(str(YEAR) + "-Games") == False:
+		os.mkdir(str(YEAR) + "-Games")
+	os.chdir(root + "\\" + str(YEAR) + "-Games")
 
 	for i in game_id_list:
 		print(f"Retrieving Play-By-Play: {i}.json")
