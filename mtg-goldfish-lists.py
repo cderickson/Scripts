@@ -488,16 +488,12 @@ def get_lists():
     print(label)
 
     os.chdir(root)
-    pickle.dump(ad,open("all_decks","wb"))
-
-#f = input("Enter format:")
-#d = input("Enter month (yyyy-mm):")
-#save_all_lists(f,d)
+    pickle.dump(ad,open("ALL_DECKS","wb"))
 
 # Wait time between format scrapes (seconds). Prevents throttling.
-wait_time = 300 
+wait_time = 300
 
-months = ["2021-12"]
+months = ["2022-02"]
 formats = ["legacy","modern","pauper","pioneer","standard","vintage"]
 
 save_multiple_months(months,formats)
