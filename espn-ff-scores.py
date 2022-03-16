@@ -94,7 +94,8 @@ def replace_names(weekly_scores_dict):
 		if weekly_scores_dict[i]["opp"] in name_dict:
 			weekly_scores_dict[i]["opp"] = name_dict[weekly_scores_dict[i]["opp"]]
 	return weekly_scores_dict
-def get_week_urls(league_id,weeks,year_num):
+def get_week_urls(league_id,year_length,year_num):
+	weeks = list(range(1, year_length + 1))
 	url_dict = {}
 	for i in weeks:
 		url = "https://fantasy.espn.com/football/league/scoreboard?seasonId="
@@ -128,6 +129,7 @@ def get_scores(url_dict):
 				opp_index = index + 1
 			else:
 				opp_index = index - 1
+				continue # Remove continue statement to build an inverse joined dataset.
 			weekly_scores_dict[j.text] = {"score" : scores[index].text, "opp" : teams[opp_index].text, "opp_score" : scores[opp_index].text}
 		weekly_scores_dict = replace_names(weekly_scores_dict)
 		scores_dict[i] = weekly_scores_dict
@@ -147,15 +149,15 @@ def to_record_list(score_dict):
 				records.append([YEAR, int(WEEK), TEAM, float(TEAM_SCORE), OPPONENT, float(OPP_SCORE)])
 	return records
 def export(score_dict,fname):
-	df = pd.DataFrame(to_record_list(score_dict), columns = ["year", "week", "team", "team_score", "opp", "opp_score"])
+	df = pd.DataFrame(to_record_list(score_dict), columns = ["year", "week", "team_1", "team_1_score", "team_2", "team_2_score"])
 	df.to_csv(fname, index=False)
 
 score_dict = {}
 league_id = "39598"
-year_num = "2020"
-weeks = list(range(1, 15))
+year_num = "2021"
+year_length = 15
 
-url_dict = get_week_urls(league_id, weeks, year_num)
+url_dict = get_week_urls(league_id, year_length, year_num)
 
 score_dict[year_num] = get_scores(url_dict)
 export(score_dict, f"ff_scores_{year_num}.csv")
