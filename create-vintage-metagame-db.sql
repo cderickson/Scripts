@@ -40,6 +40,8 @@ CREATE TABLE vintage_results (
 LOAD DATA LOCAL INFILE "C:/Users/chris/Documents/Datasets/MTG Vintage/vintage-events.csv"
 INTO TABLE vintage_metagame_db.vintage_events
 FIELDS TERMINATED BY ","
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS;
 
 -- Skipping Foreign Key check because MySQL was giving a fake error when loading data from file.
@@ -47,5 +49,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 LOAD DATA LOCAL INFILE "C:/Users/chris/Documents/Datasets/MTG Vintage/vintage-results.csv"
 INTO TABLE vintage_metagame_db.vintage_results
 FIELDS TERMINATED BY ","
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS;
 SET FOREIGN_KEY_CHECKS = 1;
