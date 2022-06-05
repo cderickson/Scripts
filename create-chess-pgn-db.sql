@@ -15,4 +15,6 @@ USE chess_pgn_db;
 LOAD DATA LOCAL INFILE "C:/Users/chris/Documents/Datasets/Chess PGN/pgn_move_records.csv"
 INTO TABLE chess_pgn_db.pgn_move_records
 FIELDS TERMINATED BY ","
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS;
