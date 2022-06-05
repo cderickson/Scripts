@@ -1,3 +1,8 @@
+## vintage-db.py
+    - Download latest MTGO Vintage metagame data from community maintained Google Sheet.
+    - Clean, format, and save data to CSV.
+    - Insert new records to MySQL database.
+    - Required Inputs: Google Sheets ID, MySQL Login.
 ## espn-ff-scores.py
     - Download weekly scores and matchups from ESPN Fantasy Football leagues and save to .csv.
     - Login will be prompted for if league is not set to public.
