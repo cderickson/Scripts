@@ -72,7 +72,6 @@ def clean_merged_data(create_date):
 	# Add 'day_of_week' column to Events table.
 	events["day_of_week"] = events["event_date"].apply(lambda x: calendar.day_name[datetime.strptime(x, "%Y-%m-%d").weekday()])
 
-
 	# Drop 'details' column. Drop 'date' and 'event_type' columns that are now in the Events table.
 	vintage.drop(["details"], axis=1, inplace=True)
 	vintage.drop(["date"], axis=1, inplace=True)
@@ -97,7 +96,6 @@ get_sheet("1wxR3iYna86qrdViwHjUPzHuw6bCNeMLb72M25hpUHYk", "1693401931", create_d
 clean_merged_data(create_date)
 
 host, user, passwd = get_login()
-
 vintage_db = mysql.connector.connect(
 	host = host,
 	user = user,
