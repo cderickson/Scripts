@@ -324,7 +324,7 @@ def save_decklist(decklist,yyyy_mm):
 
     file_name = dl_format + " - " + name + ".txt"
 
-    with open(file_name,"w") as txt:
+    with open(file_name,"w", encoding="utf-8") as txt:
         txt.write(dl_string)
     os.chdir(fp)
 
@@ -493,7 +493,7 @@ def get_lists():
 # Wait time between format scrapes (seconds). Prevents throttling.
 wait_time = 300
 
-months = ["2022-03"]
+months = ["2022-07"]
 formats = ["legacy","modern","pauper","pioneer","standard","vintage"]
 
 save_multiple_months(months,formats)
