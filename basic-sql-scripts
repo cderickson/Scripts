@@ -1,0 +1,383 @@
+-- Create a database.
+DROP DATABASE IF EXISTS sql_invoicing;
+CREATE DATABASE sql_invoicing; 
+USE sql_invoicing;
+
+
+
+
+
+-- Create a table.
+CREATE TABLE payment_methods (
+	payment_method_id tinyint(4) NOT NULL AUTO_INCREMENT,
+	name varchar(50) NOT NULL,
+	age int,
+	gender varchar(50),
+	PRIMARY KEY (`payment_method_id`)
+);
+
+
+-- ALTER Table Columns.
+ALTER TABLE Persons
+ADD Birthday DATE;
+
+ALTER TABLE Persons
+DROP COLUMN Birthday;
+
+
+
+
+-- Insert record into a table.
+INSERT INTO payment_methods 
+VALUES (DEFAULT, NULL, 1, "Male", "Credit Card");
+
+INSERT INTO payment_methods (col1, col2, col3, col4, col5)
+VALUES (DEFAULT, NULL, 1, "Male", "Credit Card");
+
+INSERT INTO payment_methods VALUES
+(DEFAULT, NULL, 1, "Male", "Credit Card"),
+(DEFAULT, NULL, 1, "Male", "Credit Card"),
+(DEFAULT, NULL, 1, "Male", "Credit Card"),
+(DEFAULT, NULL, 1, "Male", "Credit Card");
+
+-- Update a record.
+UPDATE SQLTutorial.EmployeeDemographics
+SET EmployeeID = 1012
+WHERE FirstName = "Holly" AND LastName = "Flax"
+
+-- Update multiple features.
+UPDATE SQLTutorial.EmployeeDemographics
+SET Age = 31, Gender = "Female"
+WHERE FirstName = "Holly" AND LastName = "Flax"
+
+
+-- Delete a record from table.
+DELETE FROM invoices
+WHERE invoice_id = 1
+
+
+
+
+
+-- Select statement.
+-- *, TOP n, DISTINCT, COUNT(col), AS, MAX(col), MIN(col), AVG(col), SUM(col)
+SELECT *
+FROM Customers
+WHERE (state = "VA") AND (points > 1000)
+	-- AND, OR, NOT
+	-- IN (list or series)
+	-- BETWEEN
+	-- LIKE (% = wildcard, _ = single character wildcard)
+	-- REGEXP ("^field$|rose[gim]")
+	-- IS NULL
+
+
+SELECT TOP 5 *
+FROM db.Customers
+
+SELECT DISTINCT(EmployeeID)
+FROM db.Customers
+
+-- Count non NULL values.
+SELECT COUNT(LastName) AS LastNameCount
+FROM db.Customers
+
+
+
+
+-- WHERE statement
+-- =, <>, <, >, AND, OR, LIKE, NULL, NOT NULL, IN
+-- <> : does not equal
+SELECT *
+FROM Customers
+WHERE LastName IS NULL;
+			-- IS NOT NULL
+			-- IN ("Jim", "Michael")
+			-- LIKE "S%"
+			-- <> "Jim"
+			-- NOT LIKE "[acs]%"
+
+
+SELECT *
+FROM Customers
+WHERE (Age >= 30) AND (Gender = "Male");
+
+
+
+
+-- Order By.
+SELECT *
+FROM customers
+ORDER BY state, first_name
+
+
+
+
+
+-- Joins.
+SELECT order_id, o.customer_id, first_name, last_name
+FROM orders o JOIN customers c
+ON o.customer_id = c.customer_id
+	-- USING (customer_id)
+	-- LEFT/RIGHT JOIN = keep all values from left or right table (with null values)
+	-- OUTER JOIN = all combos, including null values
+
+
+-- UNION
+-- Combine tables vertically (must have same number of columns)
+-- Does not include duplicate records (UNION ALL will include duplicates)
+SELECT *
+FROM SQLTutorial.EmployeeDemographics
+UNION 
+SELECT
+FROM SQLTutorial.WarehouseEmployeeDemographics
+
+
+
+-- Group By.
+SELECT client_id, SUM(invoice_total) AS total_sales
+FROM invoices
+GROUP BY client_id
+HAVING total_sales > 500 AND number_of_invoices > 1
+	-- HAVING must be used after group by
+	-- use GROUP BY when you are using aggregate functions in the select statement
+
+
+SELECT Gender, Age, COUNT(Gender)
+FROM Customers
+GROUP BY Gender, AGE
+
+
+SELECT Gender, COUNT(Gender) AS CountGender
+FROM Customers
+WHERE Age > 31
+GROUP BY Gender
+ORDER BY Gender ASC, CountGender ASC
+
+
+-- Partition.
+-- Allows you to perform COUNT function on only the Gender column.
+SELECT FirstName, LastName, Gender, Salary, COUNT(Gender) OVER (PARTITION BY Gender) as TotalGender
+FROM SQLTutorial.EmployeeDemographics dem JOIN SQLTutorial.EmployeeSalary sal
+ON dem.EmployeeID = sal.EmployeeID
+
+
+-- IF Statement.
+-- IF(expression, output_if_true, output_if_false)
+SELECT order_id, 
+	   order_date
+	   IF(YEAR(order_date) = YEAR(now()), "Active", "Archive")
+FROM orders
+
+
+
+
+
+-- Case Statement.
+-- Returns first case occurrence if multiple conditions are met by a record.
+SELECT CONCAT(first_name, " ", "last_name") AS customer,
+		points,
+		CASE WHEN points > 3000 THEN "Gold"
+			WHEN points >= 2000 THEN "Silver"
+			-- WHEN points BETWEEN 2000 AND 3000 THEN "Label"
+			ELSE "Bronze"
+	   	END AS category
+FROM customers
+
+
+
+
+
+-- Create a View.
+CREATE VIEW clients_balance AS
+SELECT c.client_id, c.name, SUM(invoice_total - payment_total) AS balance
+FROM clients c JOIN invoices i 
+USING (client_id)
+GROUP BY client_id, name
+
+
+
+
+
+-- Drop a View.
+DROP VIEW clients_balance
+
+
+-- Common Table Expression CTE
+-- Create a table in a subquery and lets you query it.
+-- Is not stored/saved anywhere like a view or temp table.
+-- Can used temp tables to save computing power by avoiding running the same JOIN operation multiple times.
+WITH CTE_Employee AS (
+	SELECT FirstName, LastName, Gender, Salary, COUNT(Gender) OVER (PARTITION BY Gender) as TotalGender
+	FROM SQLTutorial.EmployeeDemographics dem JOIN SQLTutorial.EmployeeSalary sal
+	ON dem.EmployeeID = sal.EmployeeID
+)
+SELECT * FROM CTE_Employee;
+
+
+
+
+-- Create a Stored Procedure.
+DROP PROCEDURE IF EXISTS get_invoices
+DELIMITER $$
+CREATE PROCEDURE get_invoices (varname VARTYPE, varname2 VARTYPE)
+BEGIN
+	SELECT *
+	FROM invoices_with_balance
+	WHERE balance > 0;
+END$$
+DELIMITER ;
+
+CALL get_invoices()
+
+-- Create a Stored Procedure.
+DROP PROCEDURE IF EXISTS Test
+CREATE PROCEDURE Test AS 
+SELECT *
+FROM EmployeeDemographics
+WHERE JobTitle = @JobTitle;
+
+EXEC Test @JobTitle = "Salesman";
+
+
+-- Output Parameters.
+DELIMITER $$
+CREATE PROCEDURE get_invoices (varname VARTYPE, OUT varname2 VARTYPE)
+BEGIN
+	SELECT COUNT(*)
+	INTO varname2
+	FROM invoices_with_balance
+	WHERE balance > 0;
+END$$
+DELIMITER ;
+
+SET @varname2 = 0;
+CALL get_invoices(3, @varname2)
+SELECT @varname2
+
+
+
+
+
+-- Local Variables.
+CREATE PROCEDURE get_risk (varname VARTYPE, OUT varname2 VARTYPE)
+BEGIN
+	DECLARE risk_factor DECIMAL(9,2) DEFAULT 0;
+	DECLARE invoices_total DECIMAL(9,2);
+	DECLARE invoices_count INT;
+
+	SELECT COUNT(*), SUM(invoice_total)
+	INTO invoices_count, invoices_total
+	FROM invoices;
+	
+	SET risk_factor = invoices_total / invoices_count * 5;
+	SELECT risk_factor
+END
+-- LOCAL VARIABLES only available in this procedure
+
+
+
+
+
+-- Create a Function.
+CREATE FUNCTION get_risk_for_client(client_id INT)
+RETURNS INTEGER
+DETERMINISTIC -- always returns same value for same input data
+READS SQL DATA 
+MODIFIES SQL DATA -- has insert, update, delete statement
+-- include at least one attribute
+BEGIN
+	DECLARE risk_factor DECIMAL(9,2) DEFAULT 0;
+	DECLARE invoices_total DECIMAL(9,2);
+	DECLARE invoices_count INT;
+
+	SELECT COUNT(*), SUM(invoice_total)
+	INTO invoices_count, invoices_total
+	FROM invoices i 
+	WHERE i.client_id = client_id;
+	
+	SET risk_factor = invoices_total / invoices_count * 5;
+	RETURN risk_factor
+END
+-- we can use functions in select statements to calculate new columns
+
+
+
+
+
+-- Create a Trigger (things that happen automatically when things are added/deleted)
+DROP TRIGGER IF EXISTS payments_after_insert
+DELIMITER $$
+CREATE TRIGGER payments_after_insert
+	AFTER INSERT ON payments 
+	FOR EACH ROW
+BEGIN
+	UPDATE invoices 
+	SET payment_total = payment_total + NEW.amount
+	WHERE invoice_id = NEW.invoice_id
+END$$
+DELIMITER ;
+
+
+
+
+
+-- View Triggers.
+SHOW TRIGGERS
+
+
+
+-- load from csv fast:
+SHOW VARIABLES LIKE "local_infile";
+
+SET global local_infile = 1;
+-- right click -> edit connection -> advanced -> paste in others box -> test connection
+-- OPT_local_infinite = 1;
+
+LOAD DATA LOCAL INFILE "C:/Users/chris/Documents/Datasets/Chess PGN/pgn_move_records.csv"
+INTO TABLE chess_pgn_db.pgn_move_records
+FIELDS TERMINATED BY ","
+IGNORE 1 ROWS;
+
+
+
+-- STRING FUNCTIONS.
+-- TRIM.
+-- UPPER(str), LOWER(str)
+SELECT EmployeeID, TRIM(EmployeeID) as id_trim
+				-- LTRIM()
+				-- RTRIM()
+FROM EmployeeErrors
+
+-- REPLACE.
+SELECT LastName, REPLACE(LastName, "- Fired", "") AS LastNameFixes
+FROM EmployeeErrors
+
+-- SUBSTRING(col, index_start, n_characters)
+-- Index values start at 1 in SQL.
+SELECT SUBSTRING(FirstName, 1,3) AS LastNameFixes
+FROM EmployeeErrors
+
+
+
+-- Subquery in SELECT statement.
+SELECT EmployeeID, Salary, (SELECT AVG(Salary) FROM EmployeeSalary) AS AllAvgSalary
+FROM EmployeeSalary
+
+-- Subquery in FROM statement.
+-- Temp tables can be used in place of FROM Subqueries.
+-- Run faster.
+SELECT *
+FROM (
+	SELECT EmployeeID, Salary, (SELECT AVG(Salary) FROM EmployeeSalary) AS AllAvgSalary
+	FROM EmployeeSalary
+) AS a
+
+-- Subquery in WHERE statement.
+SELECT EmployeeID, JobTitle, Salary
+FROM EmployeeSalary
+WHERE EmployeeID IN (
+	SELECT EmployeeID
+	FROM EmployeeDemographics
+	WHERE Age > 30
+)
