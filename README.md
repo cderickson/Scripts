@@ -1,3 +1,7 @@
+## multifaced_cards.py
+    - Pull names of Split, Transform, DFC, MDFC, Adventure cards using Scryfall API
+    - Stored in .txt file.
+    - Used as an input for MTGO-Tracker.
 ## vintage-db.py
     - Download latest MTGO Vintage metagame data from community maintained Google Sheet.
     - Clean, format, and save data to CSV.
@@ -10,7 +14,8 @@
     - Required Inputs: League ID, Year, and Total Scoring Periods (Regular Season Weeks + Post-season Rounds).
 ## mtg-goldfish-lists.py
     - Scrapes MTGGoldfish.com for uniquely named decklists with 2 or more occurrences.
-    - Saves lists as .txt files separated into folders by Month, then further saves an ALL_DECKS file for use with MTGO-Tracker.
+    - Saves lists as .txt files separated into folders by Month.
+    - Saves an ALL_DECKS file for use with MTGO-Tracker.
     - Required Inputs: Month (YYYY-MM), Format.
 ## pgn-script.py
     - Parses all .pgn files in script folder location.
