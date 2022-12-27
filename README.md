@@ -1,5 +1,5 @@
 ## multifaced_cards.py
-    - Pull names of Split, Transform, DFC, MDFC, Adventure cards using Scryfall API
+    - Pull names of Split, Transform, DFC, MDFC, Adventure cards using Scryfall API.
     - Stored in .txt file.
     - Used as an input for MTGO-Tracker.
 ## vintage-db.py
