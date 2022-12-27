@@ -1,3 +1,7 @@
+## multifaced_cards.py
+    - Pull names of Split, Transform, DFC, MDFC, Adventure cards using Scryfall API
+    - Stored in .txt file.
+    - Used as an input for MTGO-Tracker.
 ## vintage-db.py
     - Download latest MTGO Vintage metagame data from community maintained Google Sheet.
     - Clean, format, and save data to CSV.
