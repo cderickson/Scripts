@@ -4,6 +4,8 @@ import time
 from bs4 import BeautifulSoup
 import pickle
 import io
+import zipfile
+import shutil
 
 count = 0
 short_list = []
@@ -459,15 +461,21 @@ def get_lists():
     errors = []
 
     root = os.getcwd()
+    zf = zipfile.ZipFile('Lists.zip', mode='w')
     os.chdir(os.getcwd() + "\\" + "lists")
     fp = os.getcwd()
     folders = os.listdir()
     for i in folders:
+        if i == 'Lists.zip':
+            continue
         print("Parsing Month: " + i)
+        last = i
+        #zf.write(fp + "\\" + i, arcname=i)
         os.chdir(fp + "\\" + i)
         files = os.listdir()
         month_decks = []
         for j in files:
+            zf.write(j, (i + '\\' + j))
             with io.open(j,"r",encoding="ansi") as decklist:
                 initial = decklist.read()
             deck = parse_list(j,initial)
@@ -476,6 +484,7 @@ def get_lists():
             month_decks.append(deck)
         ad[i] = month_decks
 
+    zf.close()
     label = f"Imported Sample Decklists. {str(len(errors))} error(s) found"
     if len(errors) == 0:
         label += "."
@@ -488,13 +497,13 @@ def get_lists():
     print(label)
 
     os.chdir(root)
-    pickle.dump(ad,open("ALL_DECKS","wb"))
+    pickle.dump(ad,open(f'ALL_DECKS_{last}',"wb"))
 
 # Wait time between format scrapes (seconds). Prevents throttling.
 wait_time = 300
 
-months = ["2022-07"]
+months = ["2022-12"]
 formats = ["legacy","modern","pauper","pioneer","standard","vintage"]
 
-save_multiple_months(months,formats)
+#save_multiple_months(months,formats)
 get_lists()
