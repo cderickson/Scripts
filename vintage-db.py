@@ -4,6 +4,7 @@ from datetime import datetime
 from datetime import date
 import calendar
 import requests
+import pyodbc
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -96,6 +97,7 @@ get_sheet("1wxR3iYna86qrdViwHjUPzHuw6bCNeMLb72M25hpUHYk", "1693401931", create_d
 clean_merged_data(create_date)
 
 host, user, passwd = get_login()
+
 vintage_db = mysql.connector.connect(
 	host = host,
 	user = user,
