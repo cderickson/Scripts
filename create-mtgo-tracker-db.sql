@@ -10,8 +10,8 @@ USE mtgo_tracker_db;
 	-- OPT_local_infinite = 1;
 
 -- Create a table.
-DROP TABLE IF EXISTS drafts;
-CREATE TABLE drafts (
+DROP TABLE IF EXISTS mtgo_drafts;
+CREATE TABLE mtgo_drafts (
 	Draft_ID VARCHAR(75) NOT NULL,
     Hero VARCHAR(30) NOT NULL,
     Player_2 VARCHAR(30) NOT NULL,
@@ -29,34 +29,34 @@ CREATE TABLE drafts (
 );
 
 -- Create a table.
-DROP TABLE IF EXISTS picks;
-CREATE TABLE picks (
+DROP TABLE IF EXISTS mtgo_picks;
+CREATE TABLE mtgo_picks (
 	Draft_ID VARCHAR(75) NOT NULL,
-    Card VARCHAR(35) NOT NULL,
+    Card VARCHAR(50) NOT NULL,
     Pack_Num INT,
     Pick_Num INT,
     Pick_Ovr INT,
-    Avail_1 VARCHAR(35) NOT NULL,
-    Avail_2 VARCHAR(35) NOT NULL,
-    Avail_3 VARCHAR(35) NOT NULL,
-    Avail_4 VARCHAR(35) NOT NULL,
-    Avail_5 VARCHAR(35) NOT NULL,
-    Avail_6 VARCHAR(35) NOT NULL,
-    Avail_7 VARCHAR(35) NOT NULL,
-    Avail_8 VARCHAR(35) NOT NULL,
-    Avail_9 VARCHAR(35) NOT NULL,
-    Avail_10 VARCHAR(35) NOT NULL,
-    Avail_11 VARCHAR(35) NOT NULL,
-    Avail_12 VARCHAR(35) NOT NULL,
-    Avail_13 VARCHAR(35) NOT NULL,
-    Avail_14 VARCHAR(35) NOT NULL,
+    Avail_1 VARCHAR(50) NOT NULL,
+    Avail_2 VARCHAR(50) NOT NULL,
+    Avail_3 VARCHAR(50) NOT NULL,
+    Avail_4 VARCHAR(50) NOT NULL,
+    Avail_5 VARCHAR(50) NOT NULL,
+    Avail_6 VARCHAR(50) NOT NULL,
+    Avail_7 VARCHAR(50) NOT NULL,
+    Avail_8 VARCHAR(50) NOT NULL,
+    Avail_9 VARCHAR(50) NOT NULL,
+    Avail_10 VARCHAR(50) NOT NULL,
+    Avail_11 VARCHAR(50) NOT NULL,
+    Avail_12 VARCHAR(50) NOT NULL,
+    Avail_13 VARCHAR(50) NOT NULL,
+    Avail_14 VARCHAR(50) NOT NULL,
 	PRIMARY KEY (Draft_ID, Pick_Ovr),
-    FOREIGN KEY (Draft_ID) REFERENCES drafts(Draft_ID)
+    FOREIGN KEY (Draft_ID) REFERENCES mtgo_drafts(Draft_ID)
 );
 
 -- Create a table.
-DROP TABLE IF EXISTS matches_inverted;
-CREATE TABLE matches_inverted (
+DROP TABLE IF EXISTS mtgo_matches_inverted;
+CREATE TABLE mtgo_matches_inverted (
 	Match_ID VARCHAR(75) NOT NULL,
     Draft_ID VARCHAR(75) NOT NULL,
     P1 VARCHAR(30) NOT NULL,
@@ -76,12 +76,11 @@ CREATE TABLE matches_inverted (
     Match_Type VARCHAR(30),
     Date VARCHAR(20),
 	PRIMARY KEY (Match_ID, P1),
-    FOREIGN KEY (Draft_ID) REFERENCES drafts(Draft_ID)
 );
 
 -- Create a table.
-DROP TABLE IF EXISTS matches;
-CREATE TABLE matches (
+DROP TABLE IF EXISTS mtgo_matches;
+CREATE TABLE mtgo_matches (
 	Match_ID VARCHAR(75) NOT NULL,
     Draft_ID VARCHAR(75) NOT NULL,
     P1 VARCHAR(30) NOT NULL,
@@ -101,12 +100,11 @@ CREATE TABLE matches (
     Match_Type VARCHAR(30),
     Date VARCHAR(20),
 	PRIMARY KEY (Match_ID),
-    FOREIGN KEY (Draft_ID) REFERENCES drafts(Draft_ID)
 );
 
 -- Create a table.
-DROP TABLE IF EXISTS games_inverted;
-CREATE TABLE games_inverted (
+DROP TABLE IF EXISTS mtgo_games_inverted;
+CREATE TABLE mtgo_games_inverted (
 	Match_ID VARCHAR(75) NOT NULL,
     P1 VARCHAR(30) NOT NULL,
     P2 VARCHAR(30) NOT NULL,
@@ -120,12 +118,12 @@ CREATE TABLE games_inverted (
     Turns INT,
     Game_Winner VARCHAR(2),
 	PRIMARY KEY (Match_ID, Game_Num, P1),
-    FOREIGN KEY (Match_ID, P1) REFERENCES matches_inverted(Match_ID, P1)
+    FOREIGN KEY (Match_ID, P1) REFERENCES mtgo_matches_inverted(Match_ID, P1)
 );
 
 -- Create a table.
-DROP TABLE IF EXISTS games;
-CREATE TABLE games (
+DROP TABLE IF EXISTS mtgo_games;
+CREATE TABLE mtgo_games (
 	Match_ID VARCHAR(75) NOT NULL,
     P1 VARCHAR(30) NOT NULL,
     P2 VARCHAR(30) NOT NULL,
@@ -139,22 +137,22 @@ CREATE TABLE games (
     Turns INT,
     Game_Winner VARCHAR(2),
 	PRIMARY KEY (Match_ID, Game_Num),
-    FOREIGN KEY (Match_ID, P1) REFERENCES matches_inverted(Match_ID, P1)
+    FOREIGN KEY (Match_ID, P1) REFERENCES mtgo_matches_inverted(Match_ID, P1)
 );
 
 -- Create a table.
-DROP TABLE IF EXISTS plays;
-CREATE TABLE plays (
+DROP TABLE IF EXISTS mtgo_plays;
+CREATE TABLE mtgo_plays (
 	Match_ID VARCHAR(75) NOT NULL,
     Game_Num INT,
     Play_Num INT,
     Turn_Num INT,
     Casting_Player VARCHAR(30) NOT NULL,
     Action VARCHAR(20) NOT NULL,
-	Primary_Card VARCHAR(35) NOT NULL,
-    Target1 VARCHAR(35) NOT NULL,
-    Target2 VARCHAR(35) NOT NULL,
-    Target3 VARCHAR(35) NOT NULL,
+	Primary_Card VARCHAR(50) NOT NULL,
+    Target1 VARCHAR(50) NOT NULL,
+    Target2 VARCHAR(50) NOT NULL,
+    Target3 VARCHAR(50) NOT NULL,
     Opp_Target INT,
     Self_Target INT,
     Cards_Drawn INT,
@@ -162,8 +160,8 @@ CREATE TABLE plays (
     Active_Player VARCHAR(30) NOT NULL,
     Nonactive_Player VARCHAR(30) NOT NULL,
 	PRIMARY KEY (Match_ID, Game_Num, Play_Num),
-    FOREIGN KEY (Match_ID, Game_Num) REFERENCES games(Match_ID, Game_Num),
-    FOREIGN KEY (Match_ID) REFERENCES matches(Match_ID)
+    FOREIGN KEY (Match_ID, Game_Num) REFERENCES mtgo_games(Match_ID, Game_Num),
+    FOREIGN KEY (Match_ID) REFERENCES mtgo_matches(Match_ID)
 );
 
 -- Load data from CSV.
