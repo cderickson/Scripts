@@ -12,28 +12,28 @@ USE vintage_metagame_db;
 -- Create a table.
 DROP TABLE IF EXISTS vintage_events;
 CREATE TABLE vintage_events (
-	event_id VARCHAR(50) NOT NULL,
-    event_type VARCHAR(30) NOT NULL,
-    event_date DATE NOT NULL,
-    entries INT DEFAULT 0,
-    day_of_week VARCHAR(9) NOT NULL,
-	PRIMARY KEY (event_id)
+	Event_ID VARCHAR(50) NOT NULL,
+    Event_Type VARCHAR(30) NOT NULL,
+    Event_Date DATE NOT NULL,
+    Entries INT DEFAULT 0,
+    Day_Of_Week VARCHAR(9) NOT NULL,
+	PRIMARY KEY (Event_ID)
 );
 
 -- Create a table.
 DROP TABLE IF EXISTS vintage_results;
 CREATE TABLE vintage_results (
-	finish INT DEFAULT 0,
-    player VARCHAR(30) NOT NULL,
-    wins INT DEFAULT 0,
-    losses INT DEFAULT 0,
-    byes INT DEFAULT 0,
-    arch VARCHAR(30) DEFAULT NULL,
-    subarch VARCHAR(30) DEFAULT NULL,
-    deck VARCHAR(50) DEFAULT NULL,
-    event_id VARCHAR(50) NOT NULL,
-	PRIMARY KEY (event_id, finish),
-    FOREIGN KEY (event_id) REFERENCES vintage_events(event_id)
+	Finish INT DEFAULT 0,
+    Player VARCHAR(30) NOT NULL,
+    Wins INT DEFAULT 0,
+    Losses INT DEFAULT 0,
+    Byes INT DEFAULT 0,
+    Arch VARCHAR(30) DEFAULT NULL,
+    Subarch VARCHAR(30) DEFAULT NULL,
+    Deck VARCHAR(50) DEFAULT NULL,
+    Event_ID VARCHAR(50) NOT NULL,
+	PRIMARY KEY (Event_ID, Finish),
+    FOREIGN KEY (Event_ID) REFERENCES vintage_events(Event_ID)
 );
 
 -- Load data from CSV.
