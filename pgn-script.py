@@ -1,52 +1,55 @@
 import pandas as pd
 import os
+import pickle
+from datetime import datetime
 
 piece_dict = {}
 lines_list_info = []
 lines_list_moves = []
 full_table = []
 pgn_file_list = []
+type_dict = {}
 
 def pgn_header():
 	header = []
 	header.extend([
-		"match_id",
-		"w_name",
-		"w_elo",
-		"b_name",
-		"b_elo",
-		"eco",
-		"date",
-		"time",
-		"w_result",
-		"b_result",
-		"time_control",
-		"location",
-		"event",
-		"round_num"
+		"Match_ID",
+		"W_Name",
+		"W_Elo",
+		"B_Name",
+		"B_Elo",
+		"ECO",
+		"Date",
+		"Time",
+		"W_Result",
+		"B_Result",
+		"Time_Control",
+		"Location",
+		"Event",
+		"Round_Num"
 	])
 	header.extend([
-		"move_num",
-		"turn_num",
-		"move_color",
-		"piece_code",
-		"pgn_notation",
-		"piece_type",
-		"end_square.x",
-		"end_square.y",
-		"ambig_id",
-		"castle",
-		"castle_long",
-		"capture",
-		"check",
-		"checkmate",
-		"promote",
-		"promote_piece"
+		"Move_Num",
+		"Turn_Num",
+		"Move_Color",
+		"Piece_Code",
+		"PGN_Notation",
+		"Piece_Type",
+		"End_Square_x",
+		"End_Square_y",
+		"Ambig_ID",
+		"Castle",
+		"Castle_Long",
+		"Capture",
+		"In_Check",
+		"Checkmate",
+		"Promote",
+		"Promote_Piece"
 	])
 	for i in piece_code_list():
-		header.extend([f"{i}.white.x", f"{i}.white.y", f"{i}.white.isPinned", f"{i}.white.squaresControlled"])
+		header.extend([f"{i}_White_x", f"{i}_White_y", f"{i}_White_isPinned", f"{i}_White_squaresControlled"])
 	for i in piece_code_list():
-		header.extend([f"{i}.black.x", f"{i}.black.y", f"{i}.black.isPinned", f"{i}.black.squaresControlled"])
+		header.extend([f"{i}_Black_x", f"{i}_Black_y", f"{i}_Black_isPinned", f"{i}_Black_squaresControlled"])
 	header.extend(["pieceValueWhite", "pieceValueBlack", "totalSquaresControlledWhite", "totalSquaresControlledBlack"])
 	return header
 def piece_code_list():
@@ -426,12 +429,12 @@ def get_move_lists_from_pgn(lines):
 	eco = "NA"
 	date = "NA"
 	time = "NA"
-	result_white = 0
-	result_black = 0
+	result_white = 0.0
+	result_black = 0.0
 	time_control = 0
 	location = "NA"
 	event = "NA"
-	round_num = "NA"
+	round_num = 0
 
 	for i in lines.split("\n"):
 		if len(i) > 0:
@@ -466,18 +469,18 @@ def get_move_lists_from_pgn(lines):
 						time = "0" + time
 				elif info_string == "Result":
 					if info_val == "1-0":
-						result_white = 1
-						result_black = 0
+						result_white = 1.0
+						result_black = 0.0
 					elif info_val == "0-1":
-						result_white = 0
-						result_black = 1
+						result_white = 0.0
+						result_black = 1.0
 					elif info_val == "1/2-1/2":
 						result_white = 0.5
 						result_black = 0.5
 				elif info_string == "ECO":
 					eco = info_val
 				elif info_string == "TimeControl":
-					time_control = info_val
+					time_control = int(info_val)
 
 	turn = "white"
 	for i in move_string.split(" "):
@@ -1440,9 +1443,14 @@ def get_pgn_file_list():
 def split_all_pgn():
 	for i in pgn_file_list:
 		split_pgn_file(i)
-def execute():
+def execute(pgn_path, output_path, start_date, save_cols):
 	global full_table
 
+	def to_datetime(x):
+	    return datetime.strptime(x, "%Y-%m-%d")
+
+	curr_path = os.getcwd()
+	os.chdir(pgn_path)
 	get_pgn_file_list()
 	split_all_pgn()
 
@@ -1455,7 +1463,36 @@ def execute():
 		full_table.extend(table)
 		print(len(full_table))
 
+	os.chdir(output_path)
 	df = pd.DataFrame(columns=pgn_header(), data=full_table)
-	df.to_csv("pgn_move_records.csv", index=False)
-	
-execute()
+	df['ECO'] = df['ECO'].fillna('NA')
+	df['Location'] = df['Location'].fillna('NA')
+	df['Event'] = df['Event'].fillna('NA')
+	df['Ambig_ID'] = df['Ambig_ID'].fillna('NA')
+	df['Promote_Piece'] = df['Promote_Piece'].fillna('NA')
+	if start_date != 'All':
+		df = df[df.Date.apply(to_datetime) >= start_date]
+	df.drop(['Match_ID'], axis=1).to_csv("chesspgn_moves.csv", index=False)
+
+	if save_cols == True:
+		for index,i in enumerate(full_table[0]):
+			chars = 0
+			can_be_null = False
+			if type(i) == str:
+				if pgn_header()[index] in ['W_Name', 'B_Name', 'ECO', 'Date', 'Time', 'Location', 'Event']:
+					chars = 40
+				elif pgn_header()[index] == 'Match_ID':
+					chars = 100
+				else:
+					chars = 10
+			if pgn_header()[index] in ['ECO', 'Location', 'Event', 'Ambig_ID', 'Promote_Piece']:
+				can_be_null = True
+			type_dict[pgn_header()[index]] = (type(i), chars, can_be_null)
+		pickle.dump(type_dict,open("pgn_col_types","wb"))
+
+pgn_path = 'C:\\Users\\chris\\Documents\\Datasets\\Chess PGN\\pgn_files'
+output_path = 'G:\\My Drive\\Datasets\\Chess PGN'
+start_date = '2022-05-01'
+start_date = datetime.strptime(start_date, "%Y-%m-%d")
+
+execute(pgn_path=pgn_path, output_path=output_path, start_date='All', save_cols=False)
