@@ -3,6 +3,7 @@ __pycache__/
 lists/
 
 # UTILITY FILES
+export-vintage-db-to-csv-google-drive.bat
 
 # AUXILIARY FILES
 sportradar_keys.txt
