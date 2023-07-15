@@ -49,7 +49,7 @@ for (root,dirs,files) in os.walk(root_folder+'\\to_zip_mtgo_tracker'):
 
 os.chdir(root_folder)
 
-with zipfile.ZipFile(root_folder+'\\result.zip', "w") as zipf:
+with zipfile.ZipFile(root_folder+'\\MTGO-Log-Files.zip', "w") as zipf:
     for root, dirs, files in os.walk(root_folder+'\\to_zip_mtgo_tracker'):
         for file in files:
             file_path = os.path.join(root, file)
