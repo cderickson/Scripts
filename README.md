@@ -1,3 +1,6 @@
+## zip-mtgo-logs.py
+    - Scans PC for MTGO GameLog and DraftLog files.
+    - Copies the files it find into a .zip file to be uploaded to MTGO-Tracker Web for processing.
 ## multifaced_cards.py
     - Pull names of Split, Transform, DFC, MDFC, Adventure cards using Scryfall API.
     - Stored in .txt file.
