@@ -3,6 +3,16 @@ import zipfile
 import time
 import shutil
 
+def get_logtype_from_filename(filename):
+	if ('Match_GameLog_' in filename) and (len(filename) >= 30) and ('.dat' in filename):
+		return 'GameLog'
+	if (filename.count('.') != 3) or (filename.count('-') != 4) or ('.txt' not in filename):
+		return 'NA'
+	elif (len(filename.split('-')[1].split('.')[0]) != 4) or (len(filename.split('-')[2]) != 4):
+		return 'NA'
+	else:
+		return 'DraftLog'
+
 root_folder = os.getcwd()
 os.chdir('C:\\')
 files_dict = {}
@@ -12,9 +22,7 @@ if not os.path.exists(root_folder+'\\to_zip_mtgo_tracker'):
 
 for (root,dirs,files) in os.walk('C:\\'):
     for i in files:
-        if ('Match_GameLog_' not in i) or (len(i) < 30) or (i[-4:] != '.dat'):
-            pass
-        else:
+        if get_logtype_from_filename(i) == 'GameLog':
             os.chdir(root)
             if i in files_dict:
                 files_dict[i].append(time.mktime(time.strptime(time.ctime(os.path.getmtime(i)))))
@@ -26,12 +34,7 @@ for (root,dirs,files) in os.walk('C:\\'):
                 os.chdir(root)
             except shutil.SameFileError:
                 pass
-        
-        if (i.count(".") != 3) or (i.count("-") != 4) or (".txt" not in i):
-            pass
-        elif (len(i.split('-')[1].split('.')[0]) != 4) or (len(i.split('-')[2]) != 4):
-            pass
-        else:
+        elif get_logtype_from_filename(i) == 'DraftLog':
             os.chdir(root)
             try:
                 shutil.copy(i,root_folder+'\\to_zip_mtgo_tracker')
