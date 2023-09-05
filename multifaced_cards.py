@@ -1,6 +1,5 @@
 import requests
 import json
-import pickle
 
 l = ['split', 'transform', 'dfc', 'mdfc', 'adventure']
 d = {}
@@ -20,7 +19,7 @@ for card_type in l:
 	d[card_type] = card_dict
 
 for i in d:
-	print(len(d[i]))
+	print(i + ': ' + str(len(d[i])))
 
 with open('MULTIFACED_CARDS.txt','w',encoding='utf-8') as txt:
 	for i in d:
