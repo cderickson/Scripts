@@ -4,11 +4,87 @@ from selenium.webdriver.common.by import By
 import pandas as pd
 
 def replace_names(weekly_scores_dict):
-	# Populate 'name_dict' with team/player name pairs if you want team nicknames to be replaced with the name of the manager.
-	# ESPN saves team names at end of year.
-	name_dict = {
-		"TEAM_NAME_HERE" : "PLAYER_NAME_HERE"
-	}
+	name_dict_2014 = {"The Dream Team" : "CHRIS",
+					  "Fluffy Bunnybutts" : "CARLEN",
+					  "The Legion of Poop" : "ANDREW",
+					  "Sir Wallington" : "KYLE",
+					  "Darrell Bevell's #1 Fan" : "STEVE",
+					  "Sandusky's Daycare" : "DREW",
+					  "GB Packers" : "MATT",
+					  "Team nationbrickshit" : "NATHAN"}
+	name_dict_2015 = {"Season Went ByeByeBye" : "MATT",
+					  "Andrew's Best Bud" : "STEVE",
+					  "NoSteve for 2015" : "DYLAN",
+					  "Legion of Poop" : "ANDREW",
+					  "Mayors of Valuetown" : "KYLE",
+					  "You Cheater" : "SAM",
+					  "I HAVE NO FUTURE" : "NICK",
+					  "Team nationbrickshit" : "NATHAN",
+					  "Andrew's Black Friend" : "CHRIS",
+					  "Fluffy Bunnybutts" : "CARLEN"}
+	name_dict_2016 = {"Melvwin Gordon" : "MATT",
+					  "MANUAL ENTRY" : "STEVE",
+					  "2 POOPY 2 LATE _" : "DYLAN",
+					  "The Legion of Poop" : "ANDREW",
+					  "Team {|}" : "KYLE",
+					  "Chicago Dickholes" : "SAM",
+					  "LEAGUE CHAMP" : "NICK",
+					  "Team 8---D" : "NATHAN",
+					  "Ezekill Myself" : "CHRIS",
+					  "Tom Brady youre my only hope" : "CARLEN"}
+	name_dict_2017 = {"Gurley Gone Wild" : "MATT",
+					  "THE LAST JEDI BEST SW FILM" : "STEVE",
+					  "TOP DOG" : "DYLAN",
+					  "The Legion of Poop" : "ANDREW",
+					  "I love porgs" : "KYLE",
+					  "'o o'" : "SAM",
+					  "SEE YOU IN 2018 GO JAGS" : "NICK",
+					  "Fuck you faggot S" : "NATHAN",
+					  "g g" : "CHRIS",
+					  "OG Fluffy Bunnybutts" : "CARLEN"}
+	name_dict_2018 = {"Patrick is Ma Homie" : "MATT",
+					  "Juju No Jutsu" : "STEVE",
+					  "TOP DOG" : "DYLAN",
+					  "The Legion of Shit" : "ANDREW",
+					  "2009 New Orleans Aints" : "KYLE",
+					  "'o o'" : "SAM",
+					  "Sacko Boi" : "NICK",
+					  "GiveMeMyGC NoExcuses" : "NATHAN",
+					  "2018 Houston Texans" : "CHRIS",
+					  "The Brady Bunch" : "CARLEN"}
+	name_dict_2019 = {"Patrick is Ma Homie" : "MATT",
+					  "EXCITED 4 UR WEDDIN NO JUTSU" : "STEVE",
+					  "TOP DOG" : "DYLAN",
+					  "The Legion of Minshoop II" : "ANDREW",
+					  "Benching All Of My Players" : "KYLE",
+					  "'o o'" : "SAM",
+					  "Silver Medalist" : "NICK",
+					  "StopFuckingKids BeatThemInstead" : "NATHAN",
+					  "Cats in Hats" : "CHRIS",
+					  "Mrs. Sacko" : "CARLEN"}
+	name_dict_2020 = {"Patrick is Ma Homie" : "MATT",
+					  "Team Donked" : "STEVE",
+					  "TOP DOG" : "DYLAN",
+					  "The Legion of Poop" : "ANDREW",
+					  "Fresh Princes of Bell-Aire" : "KYLE",
+					  "'o o'" : "SAM",
+					  "BHB: DO NOT RESUSCITATE" : "NICK",
+					  "Botched Peen" : "NATHAN",
+					  "Seattle WA Football Team" : "CHRIS",
+					  "Bye Week" : "CARLEN"}
+	name_dict_2021 = {"Dolphins Defense" : "MATT",
+					  "TEAM GG NOT MY DAY" : "STEVE",
+					  "New #10" : "DYLAN",
+					  "The Legion of Mental Wellness" : "ANDREW",
+					  "CMC + CC BUST" : "KYLE",
+					  "'o o'" : "SAM",
+					  "Daddy Suicide" : "NICK",
+					  "Flacid Rage Quitters" : "NOAH",
+					  "Loose Ends" : "CHRIS",
+					  "Bishop Sycamore" : "JASON"}
+
+	name_dict = name_dict_2014 | name_dict_2015 | name_dict_2016 | name_dict_2017 | name_dict_2018 | \
+				name_dict_2019 | name_dict_2020 | name_dict_2021
 
 	key_list = list(weekly_scores_dict.keys())
 	for i in key_list:
@@ -77,12 +153,11 @@ def export(score_dict,fname):
 	df.to_csv(fname, index=False)
 
 score_dict = {}
-
-# Inputs
 league_id = "39598"
 year_num = "2021"
 year_length = 15
 
 url_dict = get_week_urls(league_id, year_length, year_num)
+
 score_dict[year_num] = get_scores(url_dict)
 export(score_dict, f"ff_scores_{year_num}.csv")
