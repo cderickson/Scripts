@@ -39,7 +39,7 @@ def replace_names(weekly_scores_dict):
 					  "I love porgs" : "KYLE",
 					  "'o o'" : "SAM",
 					  "SEE YOU IN 2018 GO JAGS" : "NICK",
-					  "Fuck you faggot S" : "NATHAN",
+					  "XXXX" : "NATHAN",
 					  "g g" : "CHRIS",
 					  "OG Fluffy Bunnybutts" : "CARLEN"}
 	name_dict_2018 = {"Patrick is Ma Homie" : "MATT",
