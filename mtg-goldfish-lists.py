@@ -502,7 +502,7 @@ def get_lists():
 # Wait time between format scrapes (seconds). Prevents throttling.
 wait_time = 300
 
-months = ["2024-08","2024-09","2024-10","2024-11","2024-12"]
+months = ["2025-01"]
 formats = ["legacy","modern","pauper","pioneer","standard","vintage"]
 
 save_multiple_months(months,formats)
