@@ -223,6 +223,7 @@ def get_search_url(format,yyyy_mm):
     url += "&tournament_search%5Bdate_range%5D="
     url += date1[5:7] + "%2F" + date1[8:10] + "%2F" + date1[0:4] + "+-+"
     url += date2[5:7] + "%2F" + date2[8:10] + "%2F" + date2[0:4] + "&commit=Search"
+    print(url)
     return url
 def get_tournaments(search_url):
     page = requests.get(search_url)
@@ -267,8 +268,9 @@ def get_tournaments(search_url):
         t_list.append(attributes)
     return t_list
 def get_decks(tourney):
+    print(tourney)
     t_format = tourney[2]
-    tourney_url = tourney[3]
+    tourney_url = tourney[-1]
     page = requests.get(tourney_url)
 
     # Get entire site in HTML
@@ -502,7 +504,7 @@ def get_lists():
 # Wait time between format scrapes (seconds). Prevents throttling.
 wait_time = 300
 
-months = ["2025-03"]
+months = ["2025-04"]
 formats = ["legacy","modern","pauper","pioneer","standard","vintage"]
 
 save_multiple_months(months,formats)
