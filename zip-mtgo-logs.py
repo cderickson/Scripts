@@ -17,8 +17,11 @@ def get_logtype_from_filename(filename: str) -> str:
     if (filename.count('.') != 3) or (filename.count('-') != 4) or (not filename.lower().endswith('.txt')):
         return 'NA'
     split_dash = filename.split('-')
+        # Year part (from date YYYY.MM.DD) must be 4 digits; next segment is numeric ID (e.g. 10082) allow 4-6 digits
     try:
-        if (len(split_dash[1].split('.')[0]) != 4) or (len(split_dash[2]) != 4):
+        year_part = split_dash[1].split('.')[0]
+        id_part = split_dash[2]
+        if len(year_part) != 4 or not (4 <= len(id_part) <= 6 and id_part.isdigit()):
             return 'NA'
     except Exception:
         return 'NA'
@@ -67,24 +70,31 @@ def create_zip_of_logs(root_path: str, output_zip_path: str) -> Tuple[int, Dict[
     """
     Find all MTGO log files under root_path and write them to output_zip_path.
     - Preserves file modification times inside the ZIP (zipfile.write uses file mtime)
-    - Stores files with paths relative to root_path to avoid name collisions
+    - Stores only filenames in the ZIP (no folder structure).
+    - When the same filename appears in multiple folders, keeps only the file with the oldest creation time.
     Returns the number of files added.
     """
+    # First pass: for each basename, keep only the path with the oldest creation time
+    chosen: Dict[str, Tuple[str, str]] = {}  # basename -> (full_path, kind)
+    for full_path in iter_log_files(root_path):
+        try:
+            base = os.path.basename(full_path)
+            kind = get_logtype_from_filename(base)
+            ctime = os.path.getctime(full_path)
+            if base not in chosen or ctime < os.path.getctime(chosen[base][0]):
+                chosen[base] = (full_path, kind)
+        except Exception as exc:
+            print(f"Warning: failed to read {full_path}: {exc}", file=sys.stderr)
+
     files_added = 0
     type_counts: Dict[str, int] = {"GameLog": 0, "DraftLog": 0}
     with zipfile.ZipFile(output_zip_path, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
-        for full_path in iter_log_files(root_path):
+        for base, (full_path, kind) in chosen.items():
             try:
-                kind = get_logtype_from_filename(os.path.basename(full_path))
-                arcname = os.path.relpath(full_path, start=root_path)
-                # Normalize arcname to forward slashes for ZIP consistency
-                arcname = arcname.replace('\\', '/')
-                zf.write(full_path, arcname=arcname)
+                zf.write(full_path, arcname=base)
                 files_added += 1
-                if kind in type_counts:
-                    type_counts[kind] += 1
+                type_counts[kind] += 1
             except Exception as exc:
-                # Skip problematic files but continue processing
                 print(f"Warning: failed to add {full_path}: {exc}", file=sys.stderr)
     return files_added, type_counts
 
