@@ -17,8 +17,8 @@ def get_logtype_from_filename(filename: str) -> str:
     if (filename.count('.') != 3) or (filename.count('-') != 4) or (not filename.lower().endswith('.txt')):
         return 'NA'
     split_dash = filename.split('-')
-        # Year part (from date YYYY.MM.DD) must be 4 digits; next segment is numeric ID (e.g. 10082) allow 4-6 digits
     try:
+        # Year part (from date YYYY.MM.DD) must be 4 digits; next segment is numeric ID (e.g. 10082) allow 4-6 digits
         year_part = split_dash[1].split('.')[0]
         id_part = split_dash[2]
         if len(year_part) != 4 or not (4 <= len(id_part) <= 6 and id_part.isdigit()):

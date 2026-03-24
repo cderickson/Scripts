@@ -1,11 +1,16 @@
+import argparse
 import requests
 import os
 import time
+import sys
 from bs4 import BeautifulSoup
 import pickle
 import io
 import zipfile
 import shutil
+import re
+from pathlib import Path
+from datetime import datetime
 
 count = 0
 short_list = []
@@ -183,7 +188,37 @@ def format_deckname(name):
         name_formatted = name_formatted.replace("MonoG","G")
         name_formatted = name_formatted.replace("Mono G","G")
         name_formatted = name_formatted.replace("Mono-G","G")
+    name_formatted = name_formatted.replace("'","")
+    name_formatted = name_formatted.replace("Five-colors","5c")
+    name_formatted = name_formatted.replace("Five-Colored","5c")
+    name_formatted = name_formatted.replace("Five-colored","5c")
+    name_formatted = name_formatted.replace("Five-Colored","5c")
+    name_formatted = name_formatted.replace("Five-colored","5c")
+    name_formatted = name_formatted.replace("FiveColored","5c")
+    name_formatted = name_formatted.replace("Fivecolored","5c")
+    name_formatted = name_formatted.replace("5-Color","5c")
+    name_formatted = name_formatted.replace("5-color","5c")
+    name_formatted = name_formatted.replace("5color","5c")
+    name_formatted = name_formatted.replace("5Color","5c")
+    name_formatted = name_formatted.replace("Five-Color","5c")
+    name_formatted = name_formatted.replace("Fivecolor","5c")
+    name_formatted = name_formatted.replace("FiveColor","5c")
+    
 
+    name_formatted = name_formatted.replace("Four-colors","4c")
+    name_formatted = name_formatted.replace("Four-colored","4c")
+    name_formatted = name_formatted.replace("FourColored","4c")
+    name_formatted = name_formatted.replace("Fourcolored","4c")
+    name_formatted = name_formatted.replace("Four-Colored","4c")
+    name_formatted = name_formatted.replace("Four-colored","4c")
+    name_formatted = name_formatted.replace("4-Color","4c")
+    name_formatted = name_formatted.replace("4-color","4c")
+    name_formatted = name_formatted.replace("4color","4c")
+    name_formatted = name_formatted.replace("4Color","4c")
+    name_formatted = name_formatted.replace("Four-Color","4c")
+    name_formatted = name_formatted.replace("Fourcolor","4c")
+    name_formatted = name_formatted.replace("FourColor","4c")
+    
     return name_formatted
 def get_dates(yyyy_mm):
     date1 = yyyy_mm[0:4] + "-" + yyyy_mm[5:7] + "-" + "01"
@@ -226,46 +261,52 @@ def get_search_url(format,yyyy_mm):
     print(url)
     return url
 def get_tournaments(search_url):
-    page = requests.get(search_url)
-
-    # Get entire site in HTML
-    soup = BeautifulSoup(page.content,"html.parser")
-
-    # Find tournament search result table
-    table = soup.find("table",class_="table table-striped")
-
-    # Return empty list if no tournaments found.
+    # MTGGoldfish tournament searches are paginated. Read every page so we don't
+    # only scrape the most recent few days of a month.
     t_list = []
-    if table == None:
-        return t_list
+    page_num = 1
+    while True:
+        page_url = search_url if page_num == 1 else f"{search_url}&page={page_num}"
+        page = requests.get(page_url)
+        soup = BeautifulSoup(page.content, "html.parser")
 
-    # Each row in the table is a tournament
-    tourneys = table.find_all("tr")
+        # Find tournament search result table
+        table = soup.find("table", class_="table table-striped")
+        if table is None:
+            break
 
-    for i in tourneys:
-        # Each element represents information about the tournament
-        # [Date, Name, Format]
-        elements = i.find_all("td")
+        # Each row in the table is a tournament
+        tourneys = table.find_all("tr")
+        rows_added = 0
+        for i in tourneys:
+            # Each element represents information about the tournament
+            # [Date, Name, Format]
+            elements = i.find_all("td")
+            if len(elements) < 1:
+                continue
 
-        if len(elements) < 1:
-            continue
+            # Links represents all links found in this row (there is only one link)
+            # Link => URL of tournament page
+            links = i.find_all("a")
+            link = "http://www.mtggoldfish.com"
+            for j in links:
+                link += j["href"]
 
-        # Links represents all links found in this row (there is only one link)
-        # Link => URL of tournament page
-        links = i.find_all("a")
-        link = "http://www.mtggoldfish.com"
-        for j in links:
-            link += j["href"]
+            # Attributes represents descriptive details about the tournament
+            # List of strings
+            # [Date, Name, Format]
+            attributes = []
+            for j in elements:
+                attributes.append(j.text.strip())
 
-        # Attributes represents descriptive details about the tournament
-        # List of strings
-        # [Date, Name, Format]
-        attributes = []
-        for j in elements:
-            attributes.append(j.text.strip())
+            attributes.append(link)
+            t_list.append(attributes)
+            rows_added += 1
 
-        attributes.append(link)
-        t_list.append(attributes)
+        # No table rows on this page means pagination ended.
+        if rows_added == 0:
+            break
+        page_num += 1
     return t_list
 def get_decks(tourney):
     print(tourney)
@@ -304,44 +345,44 @@ def get_decklist(deck):
     d_format = deck[1]
     deck_url = deck[2]
 
-    page = requests.get(deck_url)
+    for attempt in range(1, THROTTLE_MAX_RETRIES + 1):
+        page = requests.get(deck_url, timeout=30)
+        deck_list = page.text.replace("\r","")
 
-    deck_list = page.text
-    deck_list = deck_list.replace("\r","")
+        if "Throttled" in deck_list:
+            if attempt < THROTTLE_MAX_RETRIES:
+                print(f"Throttled fetching decklist: {name} ({d_format}). Retrying in {THROTTLE_RETRY_WAIT}s...")
+                time.sleep(THROTTLE_RETRY_WAIT)
+                continue
+            print(f"Throttled after {THROTTLE_MAX_RETRIES} attempts, skipping: {name} ({d_format})")
+            return None
 
-    return [name,d_format,deck_list]
+        return [name,d_format,deck_list]
+
+    return None
 def save_decklist(decklist,yyyy_mm):
     global count
     global short_list
 
-    fp = os.getcwd()
     name = decklist[0]
     dl_format = decklist[1]
     dl_string = decklist[2]
 
-    if os.path.isdir("lists") == False:
-        os.mkdir(fp + "\\" + "lists")
-    os.chdir(fp + "\\" + "lists")
-    if os.path.isdir(yyyy_mm) == False:
-        os.mkdir(os.getcwd() + "\\" + yyyy_mm)
-    os.chdir(os.getcwd() + "\\" + yyyy_mm)
-
-    file_name = dl_format + " - " + name + ".txt"
-
-    with open(file_name,"w", encoding="utf-8") as txt:
+    month_dir = LISTS_DIR / yyyy_mm
+    month_dir.mkdir(parents=True, exist_ok=True)
+    file_name = sanitize_windows_filename(dl_format + " - " + name + ".txt")
+    with open(month_dir / file_name,"w", encoding="utf-8") as txt:
         txt.write(dl_string)
-    os.chdir(fp)
 
     if len(dl_string) < 150:
         short_list.append(dl_format + " - " + name)
         count += 1
 def save_receipt(yyyy_mm):
-    fp = os.getcwd()
-    os.chdir(fp + "\\" + "lists")
     print("number of short lists: " + str(len(short_list)))
     print("number of total lists: " + str(len(all_decks)))
     file_name = yyyy_mm + ".txt"
-    with open(file_name,"w",encoding="utf-8") as txt:
+    LISTS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(LISTS_DIR / file_name,"w",encoding="utf-8") as txt:
         txt.write("number of short lists: " + str(len(short_list)))
         txt.write("\n")
         txt.write("number of total lists: " + str(len(all_decks)))
@@ -358,7 +399,6 @@ def save_receipt(yyyy_mm):
             txt.write("['"+i[0]+"', '"+i[1]+"', '"+i[2]+"', "+str(i[3])+"]")
             txt.write("\n")
         txt.write("------------")
-    os.chdir(fp)
 def save_all_lists(d_format,yyyy_mm):
     global all_decks
     global short_list
@@ -396,15 +436,26 @@ def save_all_lists(d_format,yyyy_mm):
     # [Name, Format, DecklistString]
     # Get all Decklist objects from our list of Decks
     decklists = []
+    throttled_skips = 0
     for i in decks_filtered:
-        decklists.append(get_decklist(i))
+        decklist = get_decklist(i)
+        if decklist is None:
+            throttled_skips += 1
+            continue
+        decklists.append(decklist)
 
     # For each Decklist object found, save the Decklist as a .txt file
     for i in decklists:
         save_decklist(i,yyyy_mm)
 
     all_decks += decks_filtered
-    print(d_format + " done. " + str(len(decks_filtered)) + " decklists saved.")
+    print(
+        d_format
+        + " done. "
+        + str(len(decklists))
+        + " decklists saved."
+        + (f" ({throttled_skips} skipped due to throttling)." if throttled_skips else "")
+    )
 def save_multiple_months(months,formats):
     global all_decks
     for yyyy_mm in months:
@@ -458,54 +509,162 @@ def parse_list(filename,init):
     #     print(name)
 
     return [name,d_format,set(maindeck)]
-def get_lists():
+def get_lists(all_decks_output_path=None):
     global ad
     errors = []
 
-    root = os.getcwd()
-    zf = zipfile.ZipFile('Lists.zip', mode='w')
-    os.chdir(os.getcwd() + "\\" + "lists")
-    fp = os.getcwd()
-    folders = os.listdir()
-    for i in folders:
-        if i == 'Lists.zip':
-            continue
-        print("Parsing Month: " + i)
-        last = i
-        #zf.write(fp + "\\" + i, arcname=i)
-        os.chdir(fp + "\\" + i)
-        files = os.listdir()
-        month_decks = []
-        for j in files:
-            zf.write(j, (i + '\\' + j))
-            with io.open(j,"r",encoding="ansi") as decklist:
-                initial = decklist.read()
-            deck = parse_list(j,initial)
-            if deck == None:
-                errors.append((i,j))
-            month_decks.append(deck)
-        ad[i] = month_decks
+    LISTS_DIR.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(LISTS_ZIP_PATH, mode='w') as zf:
+        folders = [p for p in LISTS_DIR.iterdir() if p.is_dir()]
+        for month_path in folders:
+            i = month_path.name
+            if i == 'Lists.zip':
+                continue
+            # print("Parsing Month: " + i)
+            files = [p for p in month_path.iterdir() if p.is_file()]
+            month_decks = []
+            for file_path in files:
+                j = file_path.name
+                zf.write(file_path, (i + '\\' + j))
+                with io.open(file_path,"r",encoding="ansi") as decklist:
+                    initial = decklist.read()
+                deck = parse_list(j,initial)
+                if deck == None:
+                    errors.append((i,j))
+                month_decks.append(deck)
+            ad[i] = month_decks
 
-    zf.close()
-    label = f"Imported Sample Decklists. {str(len(errors))} error(s) found"
-    if len(errors) == 0:
-        label += "."
+    print(f"Imported Sample Decklists. {len(errors)} error(s) found.")
+    error_counts_by_month_format = {}
+    for yyyy_mm, filename in errors:
+        if " - " in filename:
+            format_nm = filename.split(" - ", 1)[0]
+        else:
+            format_nm = "UNKNOWN"
+        key = (yyyy_mm, format_nm)
+        error_counts_by_month_format[key] = error_counts_by_month_format.get(key, 0) + 1
+
+    print("Error counts by YYYY-MM / format_nm:")
+    if not error_counts_by_month_format:
+        print("  (none)")
     else:
-        label += ": "
-        for index,i in enumerate(errors):
-            if index > 0:
-                label += ", "
-            label += i[0] + "/" + i[1]
-    print(label)
+        for yyyy_mm, format_nm in sorted(error_counts_by_month_format):
+            count = error_counts_by_month_format[(yyyy_mm, format_nm)]
+            print(f"  {yyyy_mm} / {format_nm}: {count}")
 
-    os.chdir(root)
-    pickle.dump(ad,open(f'ALL_DECKS',"wb"))
+    if all_decks_output_path is None:
+        all_decks_output_path = DEFAULT_ALL_DECKS_OUTPUT
+    output_path = Path(all_decks_output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "wb") as output_file:
+        pickle.dump(ad, output_file)
+    print(f"Wrote ALL_DECKS to: {output_path}")
+    print(f"Wrote Lists.zip to: {LISTS_ZIP_PATH}")
 
 # Wait time between format scrapes (seconds). Prevents throttling.
-wait_time = 300
+wait_time = 120
+THROTTLE_RETRY_WAIT = 15
+THROTTLE_MAX_RETRIES = 20
 
-months = ["2025-12","2026-01"]
-formats = ["legacy","modern","pauper","pioneer","premodern","standard","vintage"]
+DEFAULT_FORMATS = ["legacy","modern","pauper","pioneer","premodern","standard","vintage"]
+DEFAULT_ALL_DECKS_OUTPUT = str(Path(__file__).resolve().parent / "auxiliary" / "ALL_DECKS")
+AUXILIARY_DIR = Path(__file__).resolve().parent / "auxiliary"
+LISTS_DIR = AUXILIARY_DIR / "lists"
+LISTS_ZIP_PATH = AUXILIARY_DIR / "Lists.zip"
+LOGS_DIR = AUXILIARY_DIR / "logs"
+INVALID_FILENAME_CHARS = '<>:"/\\|?*'
 
-save_multiple_months(months,formats)
-get_lists()
+class TeeStream:
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data):
+        for stream in self.streams:
+            stream.write(data)
+            stream.flush()
+        return len(data)
+
+    def flush(self):
+        for stream in self.streams:
+            stream.flush()
+
+def setup_log_output(log_output_path=None):
+    if log_output_path is None:
+        LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        log_output_path = LOGS_DIR / f"mtg-goldfish-lists-{stamp}.log"
+    else:
+        log_output_path = Path(log_output_path)
+        log_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    log_file = open(log_output_path, "w", encoding="utf-8", buffering=1)
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    sys.stdout = TeeStream(original_stdout, log_file)
+    sys.stderr = TeeStream(original_stderr, log_file)
+    return log_file, original_stdout, original_stderr, Path(log_output_path)
+
+
+def sanitize_windows_filename(filename: str) -> str:
+    cleaned = filename
+    for ch in INVALID_FILENAME_CHARS:
+        cleaned = cleaned.replace(ch, "-")
+    cleaned = cleaned.rstrip(" .")
+    return cleaned or "unnamed"
+
+def _validate_month(month_value):
+    if re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", month_value) is None:
+        raise argparse.ArgumentTypeError(
+            f"Invalid month '{month_value}'. Expected format YYYY-MM."
+        )
+    return month_value
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description=(
+            "Download MTGGoldfish decklists and build ALL_DECKS pickle. "
+            "Months are required in YYYY-MM format."
+        )
+    )
+    parser.add_argument(
+        "--months",
+        nargs="+",
+        required=True,
+        type=_validate_month,
+        help='Required list of months, e.g. --months 2026-01 2026-02',
+    )
+    parser.add_argument(
+        "--formats",
+        nargs="+",
+        default=DEFAULT_FORMATS,
+        help=(
+            "Optional list of formats. "
+            "Default: legacy modern pauper pioneer premodern standard vintage"
+        ),
+    )
+    parser.add_argument(
+        "--all-decks-output",
+        default=DEFAULT_ALL_DECKS_OUTPUT,
+        help="Output path for ALL_DECKS pickle (default: auxiliary/ALL_DECKS).",
+    )
+    parser.add_argument(
+        "--log-output",
+        default=None,
+        help="Optional log file path. Default: auxiliary/logs/mtg-goldfish-lists-YYYYMMDD-HHMMSS.log",
+    )
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    log_file, original_stdout, original_stderr, log_path = setup_log_output(args.log_output)
+    print(f"Logging to: {log_path}")
+    try:
+        save_multiple_months(args.months, args.formats)
+        get_lists(args.all_decks_output)
+    finally:
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+        log_file.close()
+
+if __name__ == "__main__":
+    main()
