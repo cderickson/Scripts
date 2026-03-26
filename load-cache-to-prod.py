@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import os
 import pickle
+from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
@@ -183,6 +184,42 @@ def chunked_rows(rows: list[dict], size: int = 1000) -> Iterable[list[dict]]:
     for i in range(0, len(rows), size):
         yield rows[i : i + size]
 
+def find_duplicate_rows(rows: list[dict], key_fields: list[str]) -> dict[tuple, list[dict]]:
+    groups: dict[tuple, list[dict]] = {}
+    for row in rows:
+        key = tuple(row[field] for field in key_fields)
+        groups.setdefault(key, []).append(row)
+    return {key: grouped_rows for key, grouped_rows in groups.items() if len(grouped_rows) > 1}
+
+def duplicate_rows_to_skip_count(duplicate_map: dict[tuple, list[dict]]) -> int:
+    # For each duplicate key group, one row is kept and the rest would be skipped.
+    return sum(len(rows) - 1 for rows in duplicate_map.values())
+
+
+def build_duplicate_report_lines(table_name: str, duplicate_map: dict[tuple, list[dict]]) -> list[str]:
+    lines: list[str] = []
+    if not duplicate_map:
+        lines.append(f"No duplicate keys found in {table_name}.")
+        return lines
+
+    skipped_rows = duplicate_rows_to_skip_count(duplicate_map)
+    lines.append(f"Duplicate keys found in {table_name}: {len(duplicate_map)} key(s)")
+    lines.append(f"Rows that would be skipped in {table_name}: {skipped_rows}")
+    for key, rows in duplicate_map.items():
+        lines.append(f"  Key={key} appears {len(rows)} times")
+        for idx, row in enumerate(rows, start=1):
+            if table_name == "all_decks":
+                preview_row = {
+                    "yyyy_mm": row["yyyy_mm"],
+                    "deck_nm": row["deck_nm"],
+                    "format_nm": row["format_nm"],
+                    "deck_lst_len": len(row["deck_lst"]),
+                }
+            else:
+                preview_row = row
+            lines.append(f"    Row {idx}: {preview_row}")
+    return lines
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Upsert reference cache files into production database.")
     parser.add_argument(
@@ -231,10 +268,40 @@ def main() -> None:
     ]
 
     if args.dry_run:
+        multifaced_dupes = find_duplicate_rows(multifaced_payload, ["front_nm", "back_nm", "mult_type"])
+        input_dupes = find_duplicate_rows(input_payload, ["table_nm", "var_nm"])
+        all_decks_dupes = find_duplicate_rows(all_decks_payload, ["yyyy_mm", "deck_nm", "format_nm"])
+        multifaced_skips = duplicate_rows_to_skip_count(multifaced_dupes)
+        input_skips = duplicate_rows_to_skip_count(input_dupes)
+        all_decks_skips = duplicate_rows_to_skip_count(all_decks_dupes)
+        total_skips = multifaced_skips + input_skips + all_decks_skips
+
         print("Dry run complete. No database changes were made.")
         print(f"Would upsert {len(multifaced_payload)} rows into multifaced_cards")
         print(f"Would upsert {len(input_payload)} rows into input_options")
         print(f"Would upsert {len(all_decks_payload)} rows into all_decks")
+        print(f"Duplicate keys in multifaced_cards: {len(multifaced_dupes)}")
+        print(f"Duplicate keys in input_options: {len(input_dupes)}")
+        print(f"Duplicate keys in all_decks: {len(all_decks_dupes)}")
+        print(f"Rows that would be skipped in multifaced_cards: {multifaced_skips}")
+        print(f"Rows that would be skipped in input_options: {input_skips}")
+        print(f"Rows that would be skipped in all_decks: {all_decks_skips}")
+        print(f"Total rows that would be skipped: {total_skips}")
+
+        logs_dir = aux_dir / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        report_path = logs_dir / f"load_cache_duplicate_report_{datetime.now().strftime('%Y%m%d-%H%M%S')}.txt"
+        report_lines: list[str] = [
+            "Duplicate key report (would cause ON CONFLICT batch errors):",
+            "",
+        ]
+        report_lines.extend(build_duplicate_report_lines("multifaced_cards", multifaced_dupes))
+        report_lines.append("")
+        report_lines.extend(build_duplicate_report_lines("input_options", input_dupes))
+        report_lines.append("")
+        report_lines.extend(build_duplicate_report_lines("all_decks", all_decks_dupes))
+        report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
+        print(f"Wrote duplicate report to: {report_path}")
         return
 
     if not db_url:

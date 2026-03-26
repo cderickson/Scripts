@@ -9,6 +9,7 @@ import io
 import zipfile
 import shutil
 import re
+import itertools
 from pathlib import Path
 from datetime import datetime
 
@@ -20,205 +21,90 @@ ad = {}
 def format_deckname(name):
     # Input:  String
     # Output: String
-
     name_formatted = name
 
-    if ("WUBRG" in name):
-        name_formatted = name_formatted.replace("WUBRG","5c")
-    elif ("UBRG" in name) or ("WBRG" in name) or ("WURG" in name) or ("WUBG" in name) or ("WUBR" in name):
-        name_formatted = name_formatted.replace("UBRG","4c")
-        name_formatted = name_formatted.replace("WBRG","4c")
-        name_formatted = name_formatted.replace("WURG","4c")
-        name_formatted = name_formatted.replace("WUBG","4c")
-        name_formatted = name_formatted.replace("WUBR","4c")
-    elif ("GUW" in name) or ("GWU" in name) or ("UGW" in name) or ("WGU" in name) or ("UWG" in name) or ("WUG" in name):
-        name_formatted = name_formatted.replace("GUW","Bant")
-        name_formatted = name_formatted.replace("GWU","Bant")
-        name_formatted = name_formatted.replace("UGW","Bant")
-        name_formatted = name_formatted.replace("WGU","Bant")
-        name_formatted = name_formatted.replace("UWG","Bant")
-        name_formatted = name_formatted.replace("WUG","Bant")
-    elif ("BUW" in name) or ("BWU" in name) or ("UBW" in name) or ("WBU" in name) or ("UWB" in name) or ("WUB" in name):
-        name_formatted = name_formatted.replace("BUW","Esper")
-        name_formatted = name_formatted.replace("BWU","Esper")
-        name_formatted = name_formatted.replace("UBW","Esper")
-        name_formatted = name_formatted.replace("WBU","Esper")
-        name_formatted = name_formatted.replace("UWB","Esper")
-        name_formatted = name_formatted.replace("WUB","Esper")
-    elif ("BRU" in name) or ("BUR" in name) or ("RBU" in name) or ("UBR" in name) or ("RUB" in name) or ("URB" in name):
-        name_formatted = name_formatted.replace("BRU","Grixis")
-        name_formatted = name_formatted.replace("BUR","Grixis")
-        name_formatted = name_formatted.replace("RBU","Grixis")
-        name_formatted = name_formatted.replace("UBR","Grixis")
-        name_formatted = name_formatted.replace("RUB","Grixis")
-        name_formatted = name_formatted.replace("URB","Grixis")
-    elif ("BGR" in name) or ("BRG" in name) or ("GBR" in name) or ("RBG" in name) or ("GRB" in name) or ("RGB" in name):
-        name_formatted = name_formatted.replace("BGR","Jund")
-        name_formatted = name_formatted.replace("BRG","Jund")
-        name_formatted = name_formatted.replace("GBR","Jund")
-        name_formatted = name_formatted.replace("RBG","Jund")
-        name_formatted = name_formatted.replace("GRB","Jund")
-        name_formatted = name_formatted.replace("RGB","Jund")
-    elif ("GRW" in name) or ("GWR" in name) or ("RGW" in name) or ("WGR" in name) or ("RWG" in name) or ("WRG" in name):
-        name_formatted = name_formatted.replace("GRW","Naya")
-        name_formatted = name_formatted.replace("GWR","Naya")
-        name_formatted = name_formatted.replace("RGW","Naya")
-        name_formatted = name_formatted.replace("WGR","Naya")
-        name_formatted = name_formatted.replace("RWG","Naya")
-        name_formatted = name_formatted.replace("WRG","Naya")
-    elif ("BGW" in name) or ("BWG" in name) or ("GBW" in name) or ("WBG" in name) or ("GWB" in name) or ("WGB" in name):
-        name_formatted = name_formatted.replace("BGW","Abzan")
-        name_formatted = name_formatted.replace("BWG","Abzan")
-        name_formatted = name_formatted.replace("GBW","Abzan")
-        name_formatted = name_formatted.replace("WBG","Abzan")
-        name_formatted = name_formatted.replace("GWB","Abzan")
-        name_formatted = name_formatted.replace("WGB","Abzan")
-    elif ("RUW" in name) or ("RWU" in name) or ("URW" in name) or ("WRU" in name) or ("UWR" in name) or ("WUR" in name):
-        name_formatted = name_formatted.replace("RUW","Jeskai")
-        name_formatted = name_formatted.replace("RWU","Jeskai")
-        name_formatted = name_formatted.replace("URW","Jeskai")
-        name_formatted = name_formatted.replace("WRU","Jeskai")
-        name_formatted = name_formatted.replace("UWR","Jeskai")
-        name_formatted = name_formatted.replace("WUR","Jeskai")
-    elif ("BGU" in name) or ("BUG" in name) or ("GBU" in name) or ("UBG" in name) or ("GUB" in name) or ("UGB" in name) or ("Sultai" in name):
-        name_formatted = name_formatted.replace("BGU","BUG")
-        #name_formatted = name_formatted.replace("BUG","BUG")
-        name_formatted = name_formatted.replace("GBU","BUG")
-        name_formatted = name_formatted.replace("UBG","BUG")
-        name_formatted = name_formatted.replace("GUB","BUG")
-        name_formatted = name_formatted.replace("UGB","BUG")
-        name_formatted = name_formatted.replace("Sultai","BUG")
-    elif ("BRW" in name) or ("BWR" in name) or ("RBW" in name) or ("WBR" in name) or ("RWB" in name) or ("WRB" in name):
-        name_formatted = name_formatted.replace("BRW","Mardu")
-        name_formatted = name_formatted.replace("BWR","Mardu")
-        name_formatted = name_formatted.replace("RBW","Mardu")
-        name_formatted = name_formatted.replace("WBR","Mardu")
-        name_formatted = name_formatted.replace("RWB","Mardu")
-        name_formatted = name_formatted.replace("WRB","Mardu")
-    elif ("GRU" in name) or ("GUR" in name) or ("RGU" in name) or ("UGR" in name) or ("RUG" in name) or ("URG" in name) or ("Temur" in name):
-        name_formatted = name_formatted.replace("GRU","RUG")
-        name_formatted = name_formatted.replace("GUR","RUG")
-        name_formatted = name_formatted.replace("RGU","RUG")
-        name_formatted = name_formatted.replace("UGR","RUG")
-        #name_formatted = name_formatted.replace("RUG","RUG")
-        name_formatted = name_formatted.replace("URG","RUG")
-        name_formatted = name_formatted.replace("Temur","RUG")
-    elif ("Azorius" in name) or ("WU" in name):
-        name_formatted = name_formatted.replace("Azorius","UW")
-        name_formatted = name_formatted.replace("WU","UW")
-    elif ("RW" in name) or ("WR" in name):
-        name_formatted = name_formatted.replace("RW","Boros")
-        name_formatted = name_formatted.replace("WR","Boros")
-    elif ("Dimir" in name) or ("BU" in name):
-        name_formatted = name_formatted.replace("Dimir","UB")
-        name_formatted = name_formatted.replace("BU","UB")
-    elif ("Golgari" in name) or ("BG" in name):
-        name_formatted = name_formatted.replace("Golgari","GB")
-        name_formatted = name_formatted.replace("BG","GB")
-    elif ("Gruul" in name) or ("GR" in name):
-        name_formatted = name_formatted.replace("Gruul","RG")
-        name_formatted = name_formatted.replace("GR","RG")
-    elif ("Izzet" in name) or ("RU" in name):
-        name_formatted = name_formatted.replace("Izzet","UR")
-        name_formatted = name_formatted.replace("RU","UR")
-    elif ("Orzhov" in name) or ("WB" in name):
-        name_formatted = name_formatted.replace("Orzhov","BW")
-        name_formatted = name_formatted.replace("WB","BW")
-    elif ("Rakdos" in name) or ("BR" in name):
-        name_formatted = name_formatted.replace("Rakdos","RB")
-        name_formatted = name_formatted.replace("BR","RB")
-    elif ("Selesnya" in name) or ("WG" in name):
-        name_formatted = name_formatted.replace("Selesnya","GW")
-        name_formatted = name_formatted.replace("WG","GW")
-    elif ("Simic" in name) or ("GU" in name):
-        name_formatted = name_formatted.replace("Simic","UG")
-        name_formatted = name_formatted.replace("GU","UG")
-    elif ("Mono-White" in name) or ("Mono-white" in name) or ("Mono White" in name) or ("Mono white" in name) or \
-         ("MonoWhite" in name) or ("Monowhite" in name) or ("MonoW" in name) or ("Mono W" in name) or ("Mono-W" in name):
-        name_formatted = name_formatted.replace("Mono-White","W")
-        name_formatted = name_formatted.replace("Mono-white","W")
-        name_formatted = name_formatted.replace("Mono White","W")
-        name_formatted = name_formatted.replace("Mono white","W")
-        name_formatted = name_formatted.replace("MonoWhite","W")
-        name_formatted = name_formatted.replace("Monowhite","W")
-        name_formatted = name_formatted.replace("MonoW","W")
-        name_formatted = name_formatted.replace("Mono W","W")
-        name_formatted = name_formatted.replace("Mono-W","W")
-    elif ("Mono-Blue" in name) or ("Mono-blue" in name) or ("Mono Blue" in name) or ("Mono blue" in name) or \
-         ("MonoBlue" in name) or ("Monoblue" in name) or ("MonoU" in name) or ("Mono U" in name) or ("Mono-U" in name):
-        name_formatted = name_formatted.replace("Mono-Blue","U")
-        name_formatted = name_formatted.replace("Mono-blue","U")
-        name_formatted = name_formatted.replace("Mono Blue","U")
-        name_formatted = name_formatted.replace("Mono blue","U")
-        name_formatted = name_formatted.replace("MonoBlue","U")
-        name_formatted = name_formatted.replace("Monoblue","U")
-        name_formatted = name_formatted.replace("MonoU","U")
-        name_formatted = name_formatted.replace("Mono U","U")
-        name_formatted = name_formatted.replace("Mono-U","U")
-    elif ("Mono-Black" in name) or ("Mono-black" in name) or ("Mono Black" in name) or ("Mono black" in name) or \
-         ("MonoBlack" in name) or ("Monoblack" in name) or ("MonoB" in name) or ("Mono B" in name) or ("Mono-B" in name):
-        name_formatted = name_formatted.replace("Mono-Black","B")
-        name_formatted = name_formatted.replace("Mono-black","B")
-        name_formatted = name_formatted.replace("Mono Black","B")
-        name_formatted = name_formatted.replace("Mono black","B")
-        name_formatted = name_formatted.replace("MonoBlack","B")
-        name_formatted = name_formatted.replace("Monoblack","B")
-        name_formatted = name_formatted.replace("MonoB","B")
-        name_formatted = name_formatted.replace("Mono B","B")
-        name_formatted = name_formatted.replace("Mono-B","B")
-    elif ("Mono-Red" in name) or ("Mono-red" in name) or ("Mono Red" in name) or ("Mono red" in name) \
-         or ("MonoRed" in name) or ("Monored" in name) or ("MonoR" in name) or ("Mono R" in name) or ("Mono-R" in name):
-        name_formatted = name_formatted.replace("Mono-Red","R")
-        name_formatted = name_formatted.replace("Mono-red","R")
-        name_formatted = name_formatted.replace("Mono Red","R")
-        name_formatted = name_formatted.replace("Mono red","R")
-        name_formatted = name_formatted.replace("MonoRed","R")
-        name_formatted = name_formatted.replace("Monored","R")
-        name_formatted = name_formatted.replace("MonoR","R")
-        name_formatted = name_formatted.replace("Mono R","R")
-        name_formatted = name_formatted.replace("Mono-R","R")
-    elif ("Mono-Green" in name) or ("Mono-green" in name) or ("Mono Green" in name) or ("Mono green" in name) \
-         or ("MonoGreen" in name) or ("Monogreen" in name) or ("MonoG" in name) or ("Mono G" in name) or ("Mono-G" in name):
-        name_formatted = name_formatted.replace("Mono-Green","G")
-        name_formatted = name_formatted.replace("Mono-green","G")
-        name_formatted = name_formatted.replace("Mono Green","G")
-        name_formatted = name_formatted.replace("Mono green","G")
-        name_formatted = name_formatted.replace("MonoGreen","G")
-        name_formatted = name_formatted.replace("Monogreen","G")
-        name_formatted = name_formatted.replace("MonoG","G")
-        name_formatted = name_formatted.replace("Mono G","G")
-        name_formatted = name_formatted.replace("Mono-G","G")
-    name_formatted = name_formatted.replace("'","")
-    name_formatted = name_formatted.replace("Five-colors","5c")
-    name_formatted = name_formatted.replace("Five-Colored","5c")
-    name_formatted = name_formatted.replace("Five-colored","5c")
-    name_formatted = name_formatted.replace("Five-Colored","5c")
-    name_formatted = name_formatted.replace("Five-colored","5c")
-    name_formatted = name_formatted.replace("FiveColored","5c")
-    name_formatted = name_formatted.replace("Fivecolored","5c")
-    name_formatted = name_formatted.replace("5-Color","5c")
-    name_formatted = name_formatted.replace("5-color","5c")
-    name_formatted = name_formatted.replace("5color","5c")
-    name_formatted = name_formatted.replace("5Color","5c")
-    name_formatted = name_formatted.replace("Five-Color","5c")
-    name_formatted = name_formatted.replace("Fivecolor","5c")
-    name_formatted = name_formatted.replace("FiveColor","5c")
-    
+    def replace_color_permutations(text, letters, replacement):
+        # Match all orderings with optional dashes between letters.
+        for perm in itertools.permutations(letters, len(letters)):
+            token = r"(?:\s*-\s*)?".join(perm)
+            pattern = rf"(?<![A-Za-z]){token}(?![A-Za-z])"
+            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+        return text
 
-    name_formatted = name_formatted.replace("Four-colors","4c")
-    name_formatted = name_formatted.replace("Four-colored","4c")
-    name_formatted = name_formatted.replace("FourColored","4c")
-    name_formatted = name_formatted.replace("Fourcolored","4c")
-    name_formatted = name_formatted.replace("Four-Colored","4c")
-    name_formatted = name_formatted.replace("Four-colored","4c")
-    name_formatted = name_formatted.replace("4-Color","4c")
-    name_formatted = name_formatted.replace("4-color","4c")
-    name_formatted = name_formatted.replace("4color","4c")
-    name_formatted = name_formatted.replace("4Color","4c")
-    name_formatted = name_formatted.replace("Four-Color","4c")
-    name_formatted = name_formatted.replace("Fourcolor","4c")
-    name_formatted = name_formatted.replace("FourColor","4c")
-    
+    # 5-color (all permutations, case-insensitive, optional dashes)
+    name_formatted = replace_color_permutations(name_formatted, ("W", "U", "B", "R", "G"), "5c")
+
+    # 4-color (all 5P4 permutations = 120 variants)
+    for four_colors in itertools.combinations(("W", "U", "B", "R", "G"), 4):
+        name_formatted = replace_color_permutations(name_formatted, four_colors, "4c")
+
+    # 3-color shards/wedges (all permutations for each color set)
+    tri_color_map = {
+        ("W", "U", "G"): "Bant",
+        ("W", "U", "B"): "Esper",
+        ("U", "B", "R"): "Grixis",
+        ("B", "R", "G"): "Jund",
+        ("R", "G", "W"): "Naya",
+        ("W", "B", "G"): "Abzan",
+        ("U", "R", "W"): "Jeskai",
+        ("B", "U", "G"): "BUG",
+        ("W", "B", "R"): "Mardu",
+        ("R", "G", "U"): "RUG",
+    }
+    for tri_colors, replacement in tri_color_map.items():
+        name_formatted = replace_color_permutations(name_formatted, tri_colors, replacement)
+
+    # Common named aliases
+    name_formatted = re.sub(r"\bSultai\b", "BUG", name_formatted, flags=re.IGNORECASE)
+    name_formatted = re.sub(r"\bTemur\b", "RUG", name_formatted, flags=re.IGNORECASE)
+
+    # 2-color guild names and abbreviations
+    dual_color_map = {
+        ("W", "U"): "UW",
+        ("W", "R"): "RW",
+        ("B", "U"): "UB",
+        ("B", "G"): "GB",
+        ("G", "R"): "RG",
+        ("R", "U"): "UR",
+        ("W", "B"): "BW",
+        ("B", "R"): "RB",
+        ("W", "G"): "GW",
+        ("G", "U"): "UG",
+    }
+    for dual_colors, replacement in dual_color_map.items():
+        name_formatted = replace_color_permutations(name_formatted, dual_colors, replacement)
+
+    guild_word_map = {
+        "Azorius": "UW",
+        "Dimir": "UB",
+        "Golgari": "GB",
+        "Gruul": "RG",
+        "Izzet": "UR",
+        "Orzhov": "BW",
+        "Rakdos": "RB",
+        "Selesnya": "GW",
+        "Simic": "UG",
+    }
+    for guild_name, replacement in guild_word_map.items():
+        name_formatted = re.sub(rf"\b{guild_name}\b", replacement, name_formatted, flags=re.IGNORECASE)
+
+    # Mono color name patterns
+    mono_color_map = {
+        "white": "W",
+        "blue": "U",
+        "black": "B",
+        "red": "R",
+        "green": "G",
+    }
+    for color_name, replacement in mono_color_map.items():
+        mono_pattern = rf"\bmono(?:\s*-\s*|\s*){color_name}\b|\bmono(?:\s*-\s*|\s*){replacement}\b"
+        name_formatted = re.sub(mono_pattern, replacement, name_formatted, flags=re.IGNORECASE)
+
+    # Additional color-count aliases
+    name_formatted = name_formatted.replace("'", "")
+    name_formatted = re.sub(r"\b(?:five(?:\s*-\s*)?color(?:ed|s)?|5(?:\s*-\s*)?color)\b", "5c", name_formatted, flags=re.IGNORECASE)
+    name_formatted = re.sub(r"\b(?:four(?:\s*-\s*)?color(?:ed|s)?|4(?:\s*-\s*)?color)\b", "4c", name_formatted, flags=re.IGNORECASE)
+
     return name_formatted
 def get_dates(yyyy_mm):
     date1 = yyyy_mm[0:4] + "-" + yyyy_mm[5:7] + "-" + "01"
@@ -500,29 +386,33 @@ def parse_list(filename,init):
                 card_count -= 1
     
     # Customize Deck Naming Conventions
-    d_format = filename.split(".txt")[0].split(" - ")[0]
-    name =     filename.split(".txt")[0].split(" - ")[1]
+    d_format = filename.split(".txt")[0].split(" - ")[0].strip()
+    name = filename.split(".txt")[0].split(" - ")[1].strip()
     
     old = name
-    name = format_deckname(name)
+    name = format_deckname(name).strip()
     # if ("Mono" in old) or ("mono" in old):
     #     print(name)
 
-    return [name,d_format,set(maindeck)]
+    return [name, d_format, set(maindeck)]
 def get_lists(all_decks_output_path=None):
     global ad
     errors = []
+    dedupe_counts_by_month_format = {}
+    total_duplicates_skipped = 0
 
     LISTS_DIR.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(LISTS_ZIP_PATH, mode='w') as zf:
         folders = [p for p in LISTS_DIR.iterdir() if p.is_dir()]
         for month_path in folders:
             i = month_path.name
+            month_key = str(i).strip()
             if i == 'Lists.zip':
                 continue
             # print("Parsing Month: " + i)
             files = [p for p in month_path.iterdir() if p.is_file()]
             month_decks = []
+            seen_keys = set()
             for file_path in files:
                 j = file_path.name
                 zf.write(file_path, (i + '\\' + j))
@@ -531,8 +421,22 @@ def get_lists(all_decks_output_path=None):
                 deck = parse_list(j,initial)
                 if deck == None:
                     errors.append((i,j))
-                month_decks.append(deck)
-            ad[i] = month_decks
+                    continue
+
+                deck_nm = str(deck[0]).strip()
+                format_nm = str(deck[1]).strip()
+                deck_lst = deck[2]
+                normalized_deck = [deck_nm, format_nm, deck_lst]
+                key = (month_key, deck_nm, format_nm)
+                if key in seen_keys:
+                    month_fmt = (month_key, format_nm)
+                    dedupe_counts_by_month_format[month_fmt] = dedupe_counts_by_month_format.get(month_fmt, 0) + 1
+                    total_duplicates_skipped += 1
+                    continue
+                seen_keys.add(key)
+                month_decks.append(normalized_deck)
+
+            ad[month_key] = month_decks
 
     print(f"Imported Sample Decklists. {len(errors)} error(s) found.")
     error_counts_by_month_format = {}
@@ -551,6 +455,15 @@ def get_lists(all_decks_output_path=None):
         for yyyy_mm, format_nm in sorted(error_counts_by_month_format):
             count = error_counts_by_month_format[(yyyy_mm, format_nm)]
             print(f"  {yyyy_mm} / {format_nm}: {count}")
+
+    print("Deduped duplicates by YYYY-MM / format_nm:")
+    if not dedupe_counts_by_month_format:
+        print("  (none)")
+    else:
+        for yyyy_mm, format_nm in sorted(dedupe_counts_by_month_format):
+            count = dedupe_counts_by_month_format[(yyyy_mm, format_nm)]
+            # print(f"  {yyyy_mm} / {format_nm}: {count}")
+    print(f"Total duplicates skipped: {total_duplicates_skipped}")
 
     if all_decks_output_path is None:
         all_decks_output_path = DEFAULT_ALL_DECKS_OUTPUT
@@ -623,15 +536,16 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description=(
             "Download MTGGoldfish decklists and build ALL_DECKS pickle. "
-            "Months are required in YYYY-MM format."
+            "Months may be provided in YYYY-MM format to refresh list files."
         )
     )
     parser.add_argument(
         "--months",
         nargs="+",
-        required=True,
+        required=False,
+        default=None,
         type=_validate_month,
-        help='Required list of months, e.g. --months 2026-01 2026-02',
+        help='Optional list of months, e.g. --months 2026-01 2026-02',
     )
     parser.add_argument(
         "--formats",
@@ -659,7 +573,10 @@ def main():
     log_file, original_stdout, original_stderr, log_path = setup_log_output(args.log_output)
     print(f"Logging to: {log_path}")
     try:
-        save_multiple_months(args.months, args.formats)
+        if args.months:
+            save_multiple_months(args.months, args.formats)
+        else:
+            print("No --months provided; skipping save_multiple_months().")
         get_lists(args.all_decks_output)
     finally:
         sys.stdout = original_stdout
